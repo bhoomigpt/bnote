@@ -70,6 +70,15 @@ const Navbar = () => {
               <span className="nav-link disabled">Disabled</span>
             </li>
           </ul>
+          {/* Add Sign Up and Login Buttons */}
+          <div className="d-flex">
+            <Link to="/login" className="btn btn-outline-light me-2">
+              Login
+            </Link>
+            <Link to="/signup" className="btn btn-primary">
+              Sign Up
+            </Link>
+          </div>
         </div>
       </div>
     </nav>

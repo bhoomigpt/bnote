@@ -1,98 +1,57 @@
-const express = require('express');
-const router = express.Router();
-const fetchuser = require('../middleware/fetchuser');
-const Note = require('../models/Note');
-const { body, validationResult } = require('express-validator');
+// Notes.js (Frontend - React)
 
-// ROUTE 1: Get All Notes using: GET "/api/notes/fetchallnotes". Login required
-router.get('/fetchallnotes', fetchuser, async (req, res) => {
-  try {
-    const notes = await Note.find({ user: req.user.id });
-    res.json(notes);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: "Internal server error" });
+import React, { useState, useEffect } from 'react';
+
+const Notes = () => {
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true); // To handle loading state
+  const [error, setError] = useState(null); // To handle any fetch errors
+
+  // Fetch notes from the backend when the component mounts
+  useEffect(() => {
+    fetch('http://localhost:5000/api/notes')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setNotes(data);
+        setLoading(false); // Set loading to false after the data is fetched
+      })
+      .catch(error => {
+        setError(error.message); // If an error occurs during fetch
+        setLoading(false); // Stop loading
+      });
+  }, []); // Empty dependency array means it runs once when the component mounts
+
+  if (loading) {
+    return <p>Loading notes...</p>; // Show loading message while fetching
   }
-});
 
-// ROUTE 2: Add a new Note using: POST "/api/notes/addnote". Login required
-router.post('/addnote', fetchuser, [
-  body('title').isLength({ min: 3 }).withMessage('Enter a valid title'),
-  body('description').isLength({ min: 5 }).withMessage('Description must be at least 5 characters'),
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
-  const { title, description, tag = "" } = req.body;
-
-  try {
-    const note = new Note({
-      title,
-      description,
-      tag,
-      user: req.user.id
-    });
-    const savedNote = await note.save();
-    res.json(savedNote);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: "Internal server error" });
+  if (error) {
+    return <p>Error: {error}</p>; // Show error message if fetching fails
   }
-});
 
-// ROUTE 3: Update an existing Note using: PUT "/api/notes/updatenote". Login required
-router.put('/updatenote/:id', fetchuser, async (req, res) => {
-  const { title, description, tag } = req.body;
+  return (
+    <div>
+      <h2>Notes</h2>
+      {notes.length > 0 ? (
+        <div className="note-list">
+          {notes.map((note) => (
+            <div key={note._id} className="note-item">
+              <h3>{note.title}</h3>
+              <p>{note.description}</p>
+              <span>{note.tag || "General"}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No notes available</p>
+      )}
+    </div>
+  );
+};
 
-  // Create a newNote object
-  const newNote = {};
-  if (title) newNote.title = title;
-  if (description) newNote.description = description;
-  if (tag) newNote.tag = tag;
-
-  try {
-    // Find the note by ID
-    let note = await Note.findById(req.params.id);
-    if (!note) {
-      return res.status(404).send("Note not found");
-    }
-
-    // Check if the logged-in user is the owner of the note
-    if (note.user.toString() !== req.user.id) {
-      return res.status(401).send("Not authorized to update this note");
-    }
-
-    // Update the note
-    note = await Note.findByIdAndUpdate(req.params.id, { $set: newNote }, { new: true });
-
-    res.json(note);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-// ROUTE 4: Delete an existing Note using: DELETE "/api/notes/deletenote". Login required
-router.delete('/deletenote/:id', fetchuser, async (req, res) => {
-    try {
-      // Find the note by ID
-      let note = await Note.findById(req.params.id);
-      if (!note) {
-        return res.status(404).send("Note not found");
-      }
-  
-      // Check if the logged-in user is the owner of the note
-      if (note.user.toString() !== req.user.id) {
-        return res.status(401).send("Not authorized to delete this note");
-      }
-  
-      // Delete the note
-      await Note.findByIdAndDelete(req.params.id);
-  
-      res.json({ message: "Note deleted successfully" });
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  module.exports = router;
+export default Notes;

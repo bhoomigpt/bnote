@@ -1,29 +1,58 @@
-import React from "react";
-import { FaTrashAlt, FaEdit } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
+import Noteitem from './Noteitem'; // Import Noteitem component
 
-const NoteItem = ({ note, deleteNote }) => {
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      deleteNote(note._id); // Call deleteNote to delete from both frontend and backend
-    }
+const Notes = (props) => {
+  const [notes, setNotes] = useState([]);
+
+  useEffect(() => {
+    // Fetch notes from the database or API
+    const fetchNotes = async () => {
+      try {
+        const response = await fetch('/api/notes'); // Replace with your API endpoint
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+        const data = await response.json();
+        setNotes(data);
+      } catch (error) {
+        console.error('Failed to fetch notes:', error);
+      }
+    };
+
+    fetchNotes();
+  }, []);
+
+  const updateNote = (note) => {
+    // Update the note in the database or API (implement your logic here)
+    console.log('Update note:', note);
+  };
+
+  const handleClick = () => {
+    // Example placeholder logic to add a new note
+    const newNote = {
+      _id: new Date().toISOString(),
+      title: 'New Note',
+      content: 'This is a new note',
+    };
+    setNotes([...notes, newNote]);
   };
 
   return (
-    <div className="card" style={{ width: "18rem", padding: "10px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", backgroundColor: "#ffffff" }}>
-      <div className="card-body">
-        <h5 className="card-title" style={{ fontWeight: "bold", color: "#333" }}>{note.title}</h5>
-        <p className="card-text" style={{ fontSize: "0.9rem", color: "#555" }}>{note.description}</p>
-        <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#777" }}>
-          Tag: {note.tag || "General"}
-        </p>
-        <div className="d-flex justify-content-between">
-          <FaEdit style={{ color: "#007bff", cursor: "pointer", fontSize: "1.2rem" }} title="Edit" />
-          <FaTrashAlt style={{ color: "#dc3545", cursor: "pointer", fontSize: "1.2rem" }} title="Delete" onClick={handleDelete} />
+    <div>
+      <div className="row my-3">
+        <h2>Your Notes</h2>
+        <div className="container mx-2">
+          {notes.length === 0 && 'No notes to display'}
+          {notes.map((note) => (
+            <Noteitem key={note._id} updateNote={updateNote} note={note} />
+          ))}
         </div>
       </div>
+      <button onClick={handleClick} type="button">
+        Add Note
+      </button>
     </div>
   );
 };
 
-export default NoteItem;
-
+export default Notes;

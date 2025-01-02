@@ -1,20 +1,18 @@
-var jwt = require('jsonwebtoken');
-const JWT_SECRET = 'Harryisagoodb$oy'; 
-const fetchuser = (req, res, next) => {
-  // Get the user from the jwt token and add id to req object
-  const token = req.header('auth-token');
+const jwt = require('jsonwebtoken');
 
+const fetchuser = (req, res, next) => {
+  // Get the token from the headers
+  const token = req.header('auth-token');
   if (!token) {
-    return res.status(401).json({ error: "Access denied: No token provided" });
+    return res.status(401).json({ error: "Please authenticate using a valid token" });
   }
 
   try {
-    const data = jwt.verify(token, JWT_SECRET);
-    req.user = data.user; 
-    next(); 
+    const data = jwt.verify(token, process.env.JWT_SECRET);  // Verify the token using your secret
+    req.user = data.user;  // Add the user data to the request object
+    next();  // Proceed to the next middleware or route
   } catch (error) {
-    console.error("JWT verification failed:", error.message);
-    return res.status(401).json({ error: "Access denied: Invalid token" });
+    return res.status(401).json({ error: "Please authenticate using a valid token" });
   }
 };
 
