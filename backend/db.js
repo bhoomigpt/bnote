@@ -1,12 +1,11 @@
-const express = require('express');
-const router = express.Router();
-const fetchUser = require('../middleware/fetchUser');
-const Note = require('../models/Note');
+const mongoose = require('mongoose');
 
-// Fetch all notes
-router.get('/', fetchUser, async (req, res) => {
-  const notes = await Note.find({ user: req.user.id });
-  res.json(notes);
-});
+const mongoURI = "mongodb://localhost:27017/yourDatabaseName?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false";
 
-module.exports = router;
+const connectToMongo = () => {
+  mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("Connected to MongoDB successfully"))
+    .catch(err => console.error("Error connecting to MongoDB:", err));
+};
+
+module.exports = connectToMongo;
