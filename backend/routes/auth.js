@@ -130,7 +130,7 @@ app.post(
   }
 );
 
-// ROUTE 3: Add a new Note (Login required)
+// ROUTE 3: Add a new Note
 app.post(
   '/api/notes/addnote',
   fetchuser,
@@ -162,6 +162,22 @@ app.post(
     }
   }
 );
+
+// ROUTE 4: Fetch all notes
+app.get('/api/notes/fetchallnotes', fetchuser, async (req, res) => {
+  try {
+    const notes = await Note.find({ user: req.user.id });
+    res.json(notes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Catch-all 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 // Start the server
 app.listen(PORT, () => {
